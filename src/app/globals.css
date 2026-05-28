@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ── Tokens de diseño — Light / Corporate SaaS ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Fuentes */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Fondos */
+  --color-base:     #f8fafc;   /* slate-50 — fondo principal */
+  --color-surface:  #ffffff;   /* tarjetas / paneles */
+  --color-elevated: #f1f5f9;   /* hover, filas alternas */
+
+  /* Texto */
+  --color-text-primary:   #1e293b;   /* slate-800 */
+  --color-text-secondary: #475569;   /* slate-600 */
+  --color-text-muted:     #94a3b8;   /* slate-400 */
+
+  /* Bordes */
+  --color-border:       #e2e8f0;   /* slate-200 */
+  --color-border-focus: #94a3b8;   /* slate-400 */
+
+  /* Acento corporativo */
+  --color-accent:       #2563eb;   /* blue-600 */
+  --color-accent-hover: #1d4ed8;   /* blue-700 */
+  --color-accent-light: #eff6ff;   /* blue-50 */
+
+  /* Semánticos */
+  --color-success:       #16a34a;   /* green-600 */
+  --color-success-light: #f0fdf4;
+  --color-warning:       #d97706;   /* amber-600 */
+  --color-warning-light: #fffbeb;
+  --color-error:         #dc2626;   /* red-600 */
+  --color-error-light:   #fef2f2;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Estilos base ── */
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ── Scrollbar sutil ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Animaciones de modal ── */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+.animate-modal-backdrop { animation: modal-backdrop-in 0.18s ease-out forwards; }
+.animate-modal-panel    { animation: modal-panel-in 0.20s cubic-bezier(0.34,1.2,0.64,1) forwards; }
