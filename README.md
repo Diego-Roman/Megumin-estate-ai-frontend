@@ -25,14 +25,6 @@ Este repositorio contiene únicamente el **Dashboard (Frontend)** construido con
 
 ⚙️ **[Haz clic aquí para ver el repositorio del Backend en FastAPI](https://github.com/Diego-Roman/Megumin-estate-ai)**
 
----
-
-### 🎥 Demostración del Sistema
-> **Nota de Seguridad:** Para proteger las cuotas y claves de la API de Inteligencia Artificial (Open Router), el entorno de producción se mantiene privado. 
-> 
-> Puedes ver el flujo completo de la plataforma, desde la carga del PDF hasta la extracción de datos, en el siguiente video:
-> 
-> **[👉 Ver Video Demostrativo de Megumin Estate AI](#)**
 
 ---
 
