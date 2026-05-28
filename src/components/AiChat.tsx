@@ -208,7 +208,7 @@ export default function AiChat({ messages, setMessages }: AiChatProps) {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setThinking(true);
 
-    fetch("https://megumin-estate-ai.onrender.com/chat", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://megumin-estate-ai.onrender.com"}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_message: content }),

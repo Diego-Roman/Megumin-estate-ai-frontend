@@ -34,7 +34,8 @@ type Contract = {
   pdfUrl: string | null;
 };
 
-const API_URL = "https://megumin-estate-ai.onrender.com/contracts";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://megumin-estate-ai.onrender.com";
+const API_URL = `${BASE_URL}/contracts`;
 
 // Normalizes API response fields to our internal Contract shape.
 // Handles snake_case, camelCase, and Spanish field names.
@@ -114,7 +115,7 @@ function KpiCard({
 
 // ── Drop Zone ─────────────────────────────────────────────────────────────────
 
-const UPLOAD_URL = "https://megumin-estate-ai.onrender.com/upload-contract";
+const UPLOAD_URL = `${BASE_URL}/upload-contract`;
 
 type DropState = "idle" | "hover" | "dragging" | "accepted" | "uploading" | "success" | "error";
 

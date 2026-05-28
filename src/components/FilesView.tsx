@@ -5,7 +5,7 @@ import { FileText, ExternalLink, UploadCloud, AlertCircle, ChevronDown, Trash2 }
 import { UploadDropzone } from "@/utils/uploadthing";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 
-const API_URL = "https://megumin-estate-ai.onrender.com/contracts";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL ?? "https://megumin-estate-ai.onrender.com"}/contracts`;
 
 type ContractOption = { id: string; label: string };
 
