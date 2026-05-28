@@ -30,6 +30,8 @@ type Contract = {
   propietario: string;
   arrendatario: string;
   canon: string;
+  canonNum: number;
+  moneda: string;
   fechaFin: string;
   pdfUrl: string | null;
 };
@@ -39,6 +41,25 @@ const API_URL = `${BASE_URL}/contracts`;
 
 // Normalizes API response fields to our internal Contract shape.
 // Handles snake_case, camelCase, and Spanish field names.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function detectMoneda(raw: any, canonRaw: unknown, canonNum: number | null): string {
+  const m = String(raw.moneda ?? raw.currency ?? raw.divisa ?? raw.tipo_moneda ?? "").toUpperCase();
+  if (m.includes("COP")) return "COP";
+  if (m.includes("USD")) return "USD";
+  if (m.includes("EUR")) return "EUR";
+  if (m.length === 3)    return m;
+  // Infer from the raw canon string
+  if (typeof canonRaw === "string") {
+    const s = canonRaw.toUpperCase();
+    if (s.includes("COP")) return "COP";
+    if (s.includes("EUR") || s.includes("€")) return "EUR";
+    if (s.includes("USD")) return "USD";
+  }
+  // Heuristic: amounts above 100 000 are almost certainly COP
+  if (canonNum != null && canonNum > 100_000) return "COP";
+  return "USD";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeContract(raw: any): Contract {
   const canonRaw =
@@ -57,9 +78,14 @@ function normalizeContract(raw: any): Contract {
     raw.amount           ??
     null;
 
-  const canonNum = typeof canonRaw === "string" ? parseFloat(canonRaw.replace(/[^0-9.]/g, "")) : canonRaw;
-  const canonStr = canonNum != null && !isNaN(canonNum)
-    ? `$${Number(canonNum).toLocaleString("es-MX")}`
+  const canonNum = typeof canonRaw === "string"
+    ? parseFloat(canonRaw.replace(/[^0-9.]/g, ""))
+    : (canonRaw as number | null);
+
+  const safeNum  = canonNum != null && !isNaN(canonNum) ? canonNum : 0;
+  const moneda   = detectMoneda(raw, canonRaw, safeNum || null);
+  const canonStr = safeNum > 0
+    ? `$${safeNum.toLocaleString("es-MX")}`
     : canonRaw != null ? String(canonRaw) : "—";
 
   return {
@@ -68,9 +94,20 @@ function normalizeContract(raw: any): Contract {
     propietario:  raw.propietario  ?? raw.owner          ?? raw.owner_name    ?? raw.dueno        ?? "",
     arrendatario: raw.arrendatario ?? raw.tenant         ?? raw.tenant_name   ?? raw.inquilino    ?? raw.arrendador ?? "",
     canon:        canonStr,
+    canonNum:     safeNum,
+    moneda,
     fechaFin:     raw.fechaFin     ?? raw.end_date       ?? raw.fecha_fin     ?? raw.expiry_date  ?? raw.fecha_vencimiento ?? "",
     pdfUrl:       raw.pdf_url      ?? raw.pdfUrl         ?? null,
   };
+}
+
+const CURRENCY_LOCALE: Record<string, string> = { USD: "en-US", COP: "es-CO", EUR: "de-DE" };
+const CURRENCY_SYMBOL: Record<string, string> = { USD: "USD", COP: "COP", EUR: "EUR" };
+
+function formatCanon(amount: number, moneda: string): string {
+  const locale = CURRENCY_LOCALE[moneda] ?? "es-MX";
+  const symbol = CURRENCY_SYMBOL[moneda] ?? moneda;
+  return `${Number(amount).toLocaleString(locale)} ${symbol}`;
 }
 
 function formatBytes(bytes: number) {
@@ -613,8 +650,13 @@ export default function Home() {
     }
   };
 
-  const activeCount  = contracts.length;
-  const totalCanon   = contracts.reduce((sum, c) => sum + parseFloat(c.canon.replace(/[$,]/g, "")), 0);
+  const activeCount = contracts.length;
+
+  const canonTotals = contracts.reduce<Record<string, number>>((acc, c) => {
+    acc[c.moneda] = (acc[c.moneda] ?? 0) + c.canonNum;
+    return acc;
+  }, {});
+
   const expiringSoon = contracts.filter((c) => {
     const days = (new Date(c.fechaFin).getTime() - Date.now()) / 86_400_000;
     return days >= 0 && days <= 60;
@@ -663,15 +705,29 @@ export default function Home() {
           iconBg="bg-slate-100"
           iconColor="text-slate-500"
         />
-        <KpiCard
-          icon={DollarSign}
-          label="Canon Mensual Total"
-          value={`$${totalCanon.toLocaleString()}`}
-          sub="Suma de todos los cánones"
-          valueColor="text-blue-600"
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-        />
+        {/* ── Canon por divisa ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Canon Mensual Total</p>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <DollarSign size={15} className="text-blue-600" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {Object.keys(canonTotals).length === 0 ? (
+              <p className="text-3xl font-bold text-slate-300 leading-none">—</p>
+            ) : (
+              Object.entries(canonTotals).map(([moneda, total]) => (
+                <div key={moneda} className="flex items-baseline justify-between">
+                  <span className="text-2xl font-bold text-blue-600 leading-none tabular-nums">
+                    {formatCanon(total, moneda)}
+                  </span>
+                </div>
+              ))
+            )}
+            <p className="text-xs text-slate-400 mt-1">Agrupado por divisa</p>
+          </div>
+        </div>
         <KpiCard
           icon={expiringSoon > 0 ? AlertCircle : CheckCircle2}
           label="Vencen en 60 días"
